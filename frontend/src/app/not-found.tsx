@@ -1,41 +1,45 @@
-"use client";
+import type { Metadata } from "next";
+import NotFound from "./components/notfound";
 
-import React from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+export const metadata: Metadata = {
+    title: "404 - Page Not Found | TaskTrek",
+    description:
+        "Sorry! The page you're looking for does not exist. Go back to TaskTrek and continue managing your tasks efficiently.",
+    openGraph: {
+        title: "404 - Page Not Found | TaskTrek",
+        description:
+            "The page you tried to visit was not found. Return to TaskTrek to keep organizing your tasks easily.",
+        url: "https://todo-list-ten-nu-62.vercel.app/404",
+        siteName: "TaskTrek",
+        images: [
+            {
+                url: "/tasktrek.png",
+                width: 1200,
+                height: 630,
+                alt: "TaskTrek Logo",
+            },
+        ],
+        locale: "en_US",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "404 - Page Not Found | TaskTrek",
+        description:
+            "Sorry! The page you're looking for does not exist. Return to TaskTrek to stay productive.",
+        images: ["/tasktrek.png"],
+    },
+    robots: {
+        index: false,
+        follow: true,
+    },
+};
 
 const PageNotFound = () => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-6 text-center">
-            <motion.h1
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="text-6xl md:text-8xl font-bold text-blue-600 mb-4"
-            >
-                404
-            </motion.h1>
-            <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="text-lg md:text-2xl text-gray-700 mb-8"
-            >
-                Oops! The page you are looking for does not exist.
-            </motion.p>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-            >
-                <Link
-                    href="/"
-                    className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-                >
-                    Go Back Home
-                </Link>
-            </motion.div>
-        </div>
+        <>
+            <NotFound />
+        </>
     );
 };
 
