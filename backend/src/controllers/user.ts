@@ -7,6 +7,7 @@ import { AuthRequest } from "../middleware/authMiddleware";
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = "1d";
 
+
 export const createUser = async (req: Request, res: Response) => {
     try {
         const { username, email, password } = req.body;
