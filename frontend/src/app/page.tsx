@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "TaskTrek - Your Ultimate Task Management App",
     description:
       "TaskTrek helps you organize, prioritize, and complete your tasks efficiently. Boost your productivity with our modern task management tools.",
-    url: "https://abdinasir.dev",
+    url: "https://todo-list-ten-nu-62.vercel.app",
     siteName: "TaskTrek",
     images: [
       {
