@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import QueryProvider from "./providers/query-provider";
 
 export const metadata: Metadata = {
   title: "TaskTrek - Organize and Manage Your Tasks Efficiently",
@@ -13,7 +14,11 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/tasktrek.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <QueryProvider>
+          {children}
+        </QueryProvider>
+      </body>
     </html>
   );
 }
