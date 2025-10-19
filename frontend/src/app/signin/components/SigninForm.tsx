@@ -19,7 +19,8 @@ export default function SigninForm() {
         mutationFn: loginUser,
         onSuccess: (data) => {
             toast.success(data.message || "🎉 Login successful!");
-            router.push(data.redirect);
+            const redirectPath = data.redirect || "/user/dashboard";
+            router.push(redirectPath);
         },
         onError: (error: any) => {
             toast.error(error.message || "❌ Invalid credentials");
