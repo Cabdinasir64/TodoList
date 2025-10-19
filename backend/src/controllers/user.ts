@@ -4,6 +4,9 @@ import { validateUser } from "../utils/uservalidation";
 import { hashPassword, comparePassword } from "../utils/password";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../middleware/authMiddleware";
+import dotenv from "dotenv";
+dotenv.config();
+
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = "1d";
 
