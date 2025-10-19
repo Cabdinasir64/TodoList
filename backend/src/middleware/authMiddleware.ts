@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies?.token;
-
+        
         if (!token) {
             return res.status(401).json({ message: "Not authenticated" });
         }
