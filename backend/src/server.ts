@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./mongodb";
 import { limiter } from "./middleware/limiter";
 import userRoutes from "./routes/user";
+import taskRoutes from "./routes/task";
 import cors from "cors";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors({
 app.use(express.json());
 app.use(limiter)
 app.use("/api/users", userRoutes)
+app.use("/api/tasks", taskRoutes)
 
 
 
