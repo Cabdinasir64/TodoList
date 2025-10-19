@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { createUser } from "./signupService";
 import { validateUser, UserInput } from "./userValidation";
 import { toast, Toaster } from "react-hot-toast";
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCheck } from "react-icons/fi";
 
 export default function SignupForm() {
     const [formData, setFormData] = useState<UserInput>({
@@ -16,11 +17,13 @@ export default function SignupForm() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
     const mutation = useMutation({
         mutationFn: createUser,
         onSuccess: () => {
-            toast.success("✅ Account created successfully!");
+            toast.success("🎉 Account created successfully!");
             setFormData({ username: "", email: "", password: "" });
             setErrors({});
             setTouched({});
@@ -29,6 +32,11 @@ export default function SignupForm() {
             toast.error(error.message || "❌ Something went wrong!");
         },
     });
+
+    useEffect(() => {
+        const validationErrors = validateUser(formData);
+        setIsFormValid(Object.keys(validationErrors).length === 0);
+    }, [formData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -50,6 +58,11 @@ export default function SignupForm() {
         const validationErrors = validateUser(formData);
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
+            setTouched({
+                username: true,
+                email: true,
+                password: true,
+            });
             toast.error("Please fix validation errors");
             return;
         }
@@ -57,69 +70,156 @@ export default function SignupForm() {
         mutation.mutate(formData);
     };
 
+    const getInputIcon = (field: string) => {
+        switch (field) {
+            case "username":
+                return <FiUser className="text-gray-400" />;
+            case "email":
+                return <FiMail className="text-gray-400" />;
+            case "password":
+                return <FiLock className="text-gray-400" />;
+            default:
+                return null;
+        }
+    };
+
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 px-4">
-            <Toaster position="top-right" />
+        <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 px-4">
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                }}
+            />
+
             <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="w-full max-w-md bg-white shadow-xl rounded-2xl p-10 md:p-12"
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+                className="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl p-8 md:p-10 border border-white/50"
             >
-                <h2 className="text-4xl font-extrabold text-center text-blue-600 mb-8">
-                    Create Account
-                </h2>
+                <div className="text-center mb-10">
+                    <motion.h2
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl font-bold bg-gradient-to-r from-blue-300 to-blue-500 bg-clip-text text-transparent mb-2"
+                    >
+                        Join Us Today
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-gray-600"
+                    >
+                        Create your account and get started
+                    </motion.p>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {["username", "email", "password"].map((field) => (
-                        <div key={field}>
-                            <label className="block text-gray-700 capitalize mb-1 font-semibold">
+                        <div key={field} className="relative">
+                            <label className="block text-gray-700 capitalize mb-2 font-medium text-sm">
                                 {field}
                             </label>
-                            <input
-                                name={field}
-                                type={field === "password" ? "password" : "text"}
-                                value={formData[field as keyof UserInput]}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                placeholder={`Enter your ${field}`}
-                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 transition-all text-gray-800 bg-gray-50 ${errors[field] && touched[field]
-                                    ? "border-red-500 focus:ring-red-300"
-                                    : "border-gray-300 focus:ring-blue-400"
-                                    }`}
-                            />
-                            {errors[field] && touched[field] && (
-                                <motion.p
-                                    className="text-sm text-red-500 mt-1"
-                                    initial={{ opacity: 0, y: -5 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                >
-                                    {errors[field]}
-                                </motion.p>
-                            )}
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    {getInputIcon(field)}
+                                </div>
+
+                                <input
+                                    name={field}
+                                    type={field === "password" ? (showPassword ? "text" : "password") : "text"}
+                                    value={formData[field as keyof UserInput]}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    placeholder={`Enter your ${field}`}
+                                    className={`w-full pl-4 pr-4 py-3 border-2 rounded-xl focus:ring-2 transition-all text-gray-800 bg-white/70 backdrop-blur-sm
+                                        ${errors[field] && touched[field]
+                                            ? "border-red-400 focus:ring-red-200 focus:border-red-500"
+                                            : "border-gray-200 focus:ring-purple-200 focus:border-purple-400"
+                                        }`}
+                                />
+
+                                {field === "password" && (
+                                    <button
+                                        type="button"
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <FiEyeOff className="text-gray-400 hover:text-gray-600" />
+                                        ) : (
+                                            <FiEye className="text-gray-400 hover:text-gray-600" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <AnimatePresence>
+                                {errors[field] && touched[field] && (
+                                    <motion.p
+                                        className="text-sm text-red-500 mt-2 flex items-center"
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -5 }}
+                                    >
+                                        <span className="mr-1">•</span> {errors[field]}
+                                    </motion.p>
+                                )}
+                            </AnimatePresence>
                         </div>
                     ))}
 
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.97 }}
+                        whileHover={{
+                            scale: isFormValid ? 1.02 : 1,
+                            boxShadow: isFormValid ? "0 10px 25px -5px rgba(139, 92, 246, 0.4)" : "none"
+                        }}
+                        whileTap={{ scale: isFormValid ? 0.98 : 1 }}
                         type="submit"
-                        disabled={mutation.isPending}
-                        className="w-full py-3 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-md"
+                        disabled={mutation.isPending || !isFormValid}
+                        className={`w-full py-4 text-white text-lg font-semibold rounded-xl transition-all shadow-md flex items-center justify-center
+                            ${mutation.isPending || !isFormValid
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-gradient-to-r from-blue-300 to-blue-500 hover:from-blue-500 hover:to-blue-300"
+                            }`}
                     >
-                        {mutation.isPending ? "Creating..." : "Sign Up"}
+                        {mutation.isPending ? (
+                            <>
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                                />
+                                Creating Account...
+                            </>
+                        ) : (
+                            <>
+                                <FiCheck className="mr-2" />
+                                Sign Up
+                            </>
+                        )}
                     </motion.button>
                 </form>
 
-                <p className="text-center text-gray-600 text-sm mt-6">
-                    Already have an account?{" "}
-                    <a
-                        href="/signin"
-                        className="text-blue-600 font-medium hover:underline"
-                    >
-                        Sign In
-                    </a>
-                </p>
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                    <p className="text-center text-gray-600 text-sm">
+                        Already have an account?{" "}
+                        <a
+                            href="/signin"
+                            className="text-blue-600 font-medium hover:text-blue-800 transition-colors hover:underline"
+                        >
+                            Sign In
+                        </a>
+                    </p>
+                </div>
             </motion.div>
         </div>
     );
