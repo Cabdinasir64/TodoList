@@ -4,7 +4,6 @@ import {
     updateTask,
     deleteTask,
     getTasks,
-    getTaskById,
 } from "../controllers/task";
 import { authMiddleware } from "../middleware/authMiddleware";
 
@@ -13,8 +12,6 @@ const router = Router();
 router.post("/", authMiddleware, createTask);
 
 router.get("/", authMiddleware, getTasks);
-
-router.get("/:id", authMiddleware, getTaskById);
 
 router.put("/:id", authMiddleware, updateTask);
 
