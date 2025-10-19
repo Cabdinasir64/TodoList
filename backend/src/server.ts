@@ -5,13 +5,17 @@ import { limiter } from "./middleware/limiter";
 import userRoutes from "./routes/user";
 import taskRoutes from "./routes/task";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 connectDB();
 
 
 
+
 const app = express();
+
+app.use(cookieParser());
 
 app.use(cors({
     origin: "http://localhost:3000",
