@@ -1,5 +1,5 @@
-import Hero from './components/hero'
-import Navbar from './components/navbar'
+import Hero from './components/page/hero'
+import Navbar from './components/page/navbar'
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
