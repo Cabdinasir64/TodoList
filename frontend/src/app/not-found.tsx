@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import NotFound from "./components/notfound";
+import NotFound from "./components/global/notfound";
 
 export const metadata: Metadata = {
     title: "404 - Page Not Found | TaskTrek",
