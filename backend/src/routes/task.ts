@@ -8,19 +8,21 @@ import {
     filterTasks,
 } from "../controllers/task";
 import { authMiddleware } from "../middleware/authMiddleware";
+import { roleMiddleware } from "../middleware/roleMiddleware";
 
 const router = Router();
 
-router.post("/", authMiddleware, createTask);
 
-router.get("/", authMiddleware, getTasks);
+router.post("/", authMiddleware, roleMiddleware(["user"]), createTask);
 
-router.put("/:id", authMiddleware, updateTask);
+router.get("/", authMiddleware, roleMiddleware(["user"]), getTasks);
 
-router.delete("/:id", authMiddleware, deleteTask);
+router.put("/:id", authMiddleware, roleMiddleware(["user"]), updateTask);
 
-router.get("/search", authMiddleware, searchTasks);
+router.delete("/:id", authMiddleware, roleMiddleware(["user"]), deleteTask);
 
-router.get("/filter", authMiddleware, filterTasks);
+router.get("/search", authMiddleware, roleMiddleware(["user"]), searchTasks);
+
+router.get("/filter", authMiddleware, roleMiddleware(["user"]), filterTasks);
 
 export default router;
