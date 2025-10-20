@@ -75,7 +75,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
         res.status(200).json({
             message: "Login successful",
-            redirect: user.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+            redirect: user.role === "admin" ? "/admin" : "/user",
         });
 
     } catch (error) {
