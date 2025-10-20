@@ -20,7 +20,7 @@ export const createTask = async (req: AuthRequest, res: Response) => {
             title,
             description,
             status,
-            user: req.user.id, 
+            user: req.user.id,
         });
 
         res.status(201).json({
@@ -90,3 +90,51 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const searchTasks = async (req: AuthRequest, res: Response) => {
+    try {
+        const { query } = req.query;
+
+        if (!req.user) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+
+        if (!query || typeof query !== "string") {
+            return res.status(400).json({ message: "Search query is required" });
+        }
+
+        const tasks = await Task.find({
+            user: req.user.id,
+            $or: [
+                { title: { $regex: query, $options: "i" } },
+                { description: { $regex: query, $options: "i" } },
+            ],
+        });
+
+        res.status(200).json({ tasks });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+export const filterTasks = async (req: AuthRequest, res: Response) => {
+    try {
+        const { status } = req.query;
+
+        if (!req.user) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+
+        if (!status || !["pending", "in-progress", "completed"].includes(status as string)) {
+            return res.status(400).json({ message: "Invalid or missing status" });
+        }
+
+        const tasks = await Task.find({
+            user: req.user.id,
+            status,
+        });
+
+        res.status(200).json({ tasks });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
