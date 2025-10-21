@@ -216,8 +216,8 @@ const UserSidebar = () => {
 
     return (
         <>
-            {desktopSidebar}
-            {mobileSidebar}
+            {!isMobile && desktopSidebar}
+            {isMobile && mobileSidebar}
         </>
     );
 };
