@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
     Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend,
     PieLabelRenderProps
 } from 'recharts';
+import api from '../../util/api'
 
 interface Task {
     _id: string;
@@ -19,19 +20,18 @@ interface Task {
 interface TasksResponse {
     message: string;
     tasks: Task[];
-    total?: number;
-    pending?: number;
-    inProgress?: number;
-    completed?: number;
+}
+
+interface StatusDataItem {
+    name: string;
+    value: number;
+    percentage: string;
+    color: string;
+    [key: string]: unknown;
 }
 
 interface PayloadItem {
-    payload: {
-        name: string;
-        value: number;
-        percentage: string;
-        color: string;
-    };
+    payload: StatusDataItem;
     name: string;
     value: number;
 }
@@ -92,52 +92,23 @@ const renderCustomizedLabel = (props: PieLabelRenderProps) => {
     );
 };
 
+
 const Overview = () => {
-    const [tasksData, setTasksData] = useState<TasksResponse | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: tasksData, isLoading, error } = useQuery({
+        queryKey: ['tasks'],
+        queryFn: async (): Promise<TasksResponse> => {
+            const response = await api.get<TasksResponse>('/api/tasks');
+            return response.data;
+        },
+        retry: 1,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`, {
-                    method: "GET",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch tasks: ${response.status}`);
-                }
-
-                const data: TasksResponse = await response.json();
-
-                const total = data.tasks?.length || 0;
-                const pending = data.tasks?.filter(task => task.status === "pending").length || 0;
-                const inProgress = data.tasks?.filter(task => task.status === "in-progress").length || 0;
-                const completed = data.tasks?.filter(task => task.status === "completed").length || 0;
-
-                setTasksData({
-                    ...data,
-                    total,
-                    pending,
-                    inProgress,
-                    completed
-                });
-            } catch (err: unknown) {
-                setError(err instanceof Error ? err.message : "An error occurred");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchTasks();
-    }, []);
+    // Calculate statistics from tasks
+    const total = tasksData?.tasks?.length || 0;
+    const pending = tasksData?.tasks?.filter(task => task.status === "pending").length || 0;
+    const inProgress = tasksData?.tasks?.filter(task => task.status === "in-progress").length || 0;
+    const completed = tasksData?.tasks?.filter(task => task.status === "completed").length || 0;
 
     if (isLoading) {
         return (
@@ -170,12 +141,12 @@ const Overview = () => {
                 <div className="text-red-600 text-lg font-semibold mb-2">
                     Error loading tasks
                 </div>
-                <p className="text-red-500">{error}</p>
+                <p className="text-red-500">Please try again later</p>
             </div>
         );
     }
 
-    if (!tasksData || !tasksData.tasks) {
+    if (!tasksData || !tasksData.tasks || tasksData.tasks.length === 0) {
         return (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                 <div className="text-yellow-600 text-lg font-semibold mb-2">
@@ -186,24 +157,24 @@ const Overview = () => {
         );
     }
 
-    const totalTasks = tasksData.total || 1;
-    const statusData = [
+    const totalTasks = total || 1;
+    const statusData: StatusDataItem[] = [
         {
             name: 'Pending',
-            value: tasksData.pending || 0,
-            percentage: ((tasksData.pending || 0) / totalTasks * 100).toFixed(1),
+            value: pending,
+            percentage: ((pending) / totalTasks * 100).toFixed(1),
             color: COLORS.pending
         },
         {
             name: 'In Progress',
-            value: tasksData.inProgress || 0,
-            percentage: ((tasksData.inProgress || 0) / totalTasks * 100).toFixed(1),
+            value: inProgress,
+            percentage: ((inProgress) / totalTasks * 100).toFixed(1),
             color: COLORS['in-progress']
         },
         {
             name: 'Completed',
-            value: tasksData.completed || 0,
-            percentage: ((tasksData.completed || 0) / totalTasks * 100).toFixed(1),
+            value: completed,
+            percentage: ((completed) / totalTasks * 100).toFixed(1),
             color: COLORS.completed
         }
     ];
@@ -212,12 +183,13 @@ const Overview = () => {
 
     return (
         <div className="space-y-6">
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-                            <p className="text-3xl font-bold text-gray-900">{tasksData.total || 0}</p>
+                            <p className="text-3xl font-bold text-gray-900">{total}</p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-full">
                             <span className="text-blue-600 text-xl">📋</span>
@@ -229,9 +201,9 @@ const Overview = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">Pending</p>
-                            <p className="text-3xl font-bold text-gray-900">{tasksData.pending || 0}</p>
+                            <p className="text-3xl font-bold text-gray-900">{pending}</p>
                             <p className="text-xs text-amber-600 mt-1">
-                                {((tasksData.pending || 0) / totalTasks * 100).toFixed(1)}%
+                                {((pending) / totalTasks * 100).toFixed(1)}%
                             </p>
                         </div>
                         <div className="p-3 bg-amber-100 rounded-full">
@@ -244,9 +216,9 @@ const Overview = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">In Progress</p>
-                            <p className="text-3xl font-bold text-gray-900">{tasksData.inProgress || 0}</p>
+                            <p className="text-3xl font-bold text-gray-900">{inProgress}</p>
                             <p className="text-xs text-blue-600 mt-1">
-                                {((tasksData.inProgress || 0) / totalTasks * 100).toFixed(1)}%
+                                {((inProgress) / totalTasks * 100).toFixed(1)}%
                             </p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-full">
@@ -259,9 +231,9 @@ const Overview = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">Completed</p>
-                            <p className="text-3xl font-bold text-gray-900">{tasksData.completed || 0}</p>
+                            <p className="text-3xl font-bold text-gray-900">{completed}</p>
                             <p className="text-xs text-green-600 mt-1">
-                                {((tasksData.completed || 0) / totalTasks * 100).toFixed(1)}%
+                                {((completed) / totalTasks * 100).toFixed(1)}%
                             </p>
                         </div>
                         <div className="p-3 bg-green-100 rounded-full">
@@ -271,7 +243,9 @@ const Overview = () => {
                 </div>
             </div>
 
+            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Status Distribution Chart */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Distribution</h3>
                     <div className="h-64 w-full">
@@ -298,6 +272,7 @@ const Overview = () => {
                     </div>
                 </div>
 
+                {/* Tasks Overview */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks Summary</h3>
                     <div className="h-64 flex flex-col justify-center">
@@ -327,7 +302,7 @@ const Overview = () => {
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-semibold text-gray-900">Total</span>
                                     <span className="text-sm font-semibold text-gray-900">
-                                        {tasksData.total || 0}
+                                        {total}
                                     </span>
                                 </div>
                             </div>
@@ -336,6 +311,7 @@ const Overview = () => {
                 </div>
             </div>
 
+            {/* Recent Tasks */}
             <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">Recent Tasks</h3>
