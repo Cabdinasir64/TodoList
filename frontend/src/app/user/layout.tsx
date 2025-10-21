@@ -54,13 +54,15 @@ interface UserLayoutProps {
 
 export default function UserLayout({ children }: UserLayoutProps) {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex flex-col h-screen bg-gray-50">
             <UserHeader />
-            <div className="flex flex-col lg:flex-row">
+            <div className="flex flex-1 overflow-hidden">
                 <UserSidebar />
-                <main className="flex-1 p-4 lg:p-6 w-full">
-                    {children}
-                </main>
+                <div className="flex-1 flex flex-col min-h-0">
+                    <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
+                        {children}
+                    </main>
+                </div>
             </div>
         </div>
     );
