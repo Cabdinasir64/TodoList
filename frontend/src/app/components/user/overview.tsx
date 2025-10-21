@@ -101,10 +101,9 @@ const Overview = () => {
             return response.data;
         },
         retry: 1,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000,
     });
 
-    // Calculate statistics from tasks
     const total = tasksData?.tasks?.length || 0;
     const pending = tasksData?.tasks?.filter(task => task.status === "pending").length || 0;
     const inProgress = tasksData?.tasks?.filter(task => task.status === "in-progress").length || 0;
@@ -183,7 +182,6 @@ const Overview = () => {
 
     return (
         <div className="space-y-6">
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
                     <div className="flex items-center justify-between">
@@ -243,9 +241,7 @@ const Overview = () => {
                 </div>
             </div>
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Status Distribution Chart */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Distribution</h3>
                     <div className="h-64 w-full">
@@ -272,7 +268,6 @@ const Overview = () => {
                     </div>
                 </div>
 
-                {/* Tasks Overview */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks Summary</h3>
                     <div className="h-64 flex flex-col justify-center">
@@ -311,7 +306,6 @@ const Overview = () => {
                 </div>
             </div>
 
-            {/* Recent Tasks */}
             <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">Recent Tasks</h3>
