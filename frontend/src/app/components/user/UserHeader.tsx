@@ -71,10 +71,10 @@ const UserHeader = () => {
             logout();
             toast.success("Logged out successfully");
             router.push("/signin");
-        } catch (err: any) {
+        } catch (err: unknown) {
             queryClient.removeQueries({ queryKey: ['userProfile'] });
             logout();
-            toast.error(err.message || "Logout completed locally");
+            toast.error((err as Error).message || "Logout completed locally");
             router.push("/signin");
         } finally {
             setIsDropdownOpen(false);
@@ -167,7 +167,7 @@ const UserHeader = () => {
                                 </div>
                                 <button
                                     onClick={handleProfileClick}
-                                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-150 flex items-center space-x-2"
+                                    className="w-full px-4 py-2 text-sm cursor-pointer text-gray-700 hover:bg-gray-50 text-left transition-colors duration-150 flex items-center space-x-2"
                                 >
                                     <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -176,7 +176,7 @@ const UserHeader = () => {
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left transition-colors duration-150 flex items-center space-x-2"
+                                    className="w-full px-4 py-2 text-sm cursor-pointer text-red-600 hover:bg-red-50 text-left transition-colors duration-150 flex items-center space-x-2"
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
