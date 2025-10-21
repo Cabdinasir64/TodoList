@@ -29,8 +29,12 @@ export default function SignupForm() {
             setErrors({});
             setTouched({});
         },
-        onError: (error: any) => {
-            toast.error(error.message || "❌ Something went wrong!");
+        onError: (error: unknown) => {
+            if (error instanceof Error) {
+                toast.error(error.message || "❌ Something went wrong!");
+            } else {
+                toast.error("❌ An unknown error occurred");
+            }
         },
     });
 
