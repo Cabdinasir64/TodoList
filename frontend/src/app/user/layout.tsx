@@ -8,6 +8,7 @@ export const metadata: Metadata = {
         default: "User Dashboard",
     },
     description: "Manage your account, tasks, and profile in one place",
+    metadataBase: new URL("https://yourdomain.com"),
     keywords: ["user", "dashboard", "tasks", "profile", "management"],
     authors: [{ name: "TaskTrek" }],
     creator: "TaskTrek",
@@ -17,7 +18,6 @@ export const metadata: Metadata = {
         address: false,
         telephone: false,
     },
-    metadataBase: new URL("https://yourdomain.com"),
     alternates: {
         canonical: "/user",
     },
