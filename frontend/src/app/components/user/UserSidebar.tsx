@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMobileMenuStore } from "../../lib/mobileMenuStore";
+import { useStore } from '../../lib/userStore'
 
 interface NavItem {
     name: string;
@@ -12,23 +14,47 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { name: "Dashboard", href: "/user/dashboard", icon: "📊" },
     { name: "Tasks", href: "/user/task", icon: "✅" },
     { name: "Profile", href: "/user/profile", icon: "👤" },
 ];
 
 const UserSidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
     const pathname = usePathname();
 
-    return (
+    const { isMobileMenuOpen, closeMobileMenu } = useMobileMenuStore();
+    const { username } = useStore();
+
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 1024);
+            if (window.innerWidth < 1024) {
+                setIsOpen(false);
+            } else {
+                setIsOpen(true);
+            }
+        };
+
+        checkIfMobile();
+        window.addEventListener('resize', checkIfMobile);
+
+        return () => {
+            window.removeEventListener('resize', checkIfMobile);
+        };
+    }, []);
+
+    useEffect(() => {
+        closeMobileMenu();
+    }, [pathname, closeMobileMenu]);
+
+    const desktopSidebar = (
         <motion.div
             initial={{ width: 256 }}
             animate={{ width: isOpen ? 256 : 80 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="bg-gradient-to-b from-gray-800 to-gray-900 text-white h-screen p-4 flex flex-col relative shadow-xl"
+            className="bg-gradient-to-b from-gray-800 to-gray-900 text-white h-screen p-4 flex-col relative shadow-xl hidden lg:flex"
         >
-            {/* Toggle button */}
             <div className={`flex items-center ${isOpen ? "justify-between" : "justify-center"} mb-8`}>
                 <AnimatePresence>
                     {isOpen && (
@@ -39,7 +65,7 @@ const UserSidebar = () => {
                             transition={{ duration: 0.2 }}
                             className="font-bold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                         >
-                            Logo
+                            TaskTrek
                         </motion.span>
                     )}
                 </AnimatePresence>
@@ -58,8 +84,6 @@ const UserSidebar = () => {
                     </motion.span>
                 </motion.button>
             </div>
-
-            {/* Navigation links */}
             <nav className="flex flex-col gap-2 flex-1">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
@@ -70,13 +94,13 @@ const UserSidebar = () => {
                                 whileHover={{ scale: 1.02, x: 4 }}
                                 whileTap={{ scale: 0.98 }}
                                 className={`
-                  flex items-center gap-3 p-3 rounded-xl transition-all duration-200
-                  ${isActive
+                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                                    ${isActive
                                         ? "bg-blue-500 shadow-lg shadow-blue-500/25"
                                         : "bg-gray-700/50 hover:bg-gray-700"
                                     }
-                  ${isOpen ? "justify-start" : "justify-center"}
-                `}
+                                    ${isOpen ? "justify-start" : "justify-center"}
+                                `}
                             >
                                 <span className="text-lg flex-shrink-0">{item.icon}</span>
 
@@ -94,7 +118,6 @@ const UserSidebar = () => {
                                     )}
                                 </AnimatePresence>
 
-                                {/* Active indicator dot for collapsed state */}
                                 {!isOpen && isActive && (
                                     <motion.div
                                         initial={{ scale: 0 }}
@@ -107,30 +130,95 @@ const UserSidebar = () => {
                     );
                 })}
             </nav>
+        </motion.div>
+    );
 
-            {/* User info at bottom (optional) */}
+    const mobileSidebar = (
+        <>
             <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.2 }}
-                        className="mt-auto p-3 bg-gray-700/30 rounded-xl border border-gray-600"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                                <span className="text-white text-sm font-bold">U</span>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={closeMobileMenu}
+                            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+                        />
+                        <motion.div
+                            initial={{ x: -300 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -300 }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="lg:hidden fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-gray-800 to-gray-900 text-white z-50 p-4 flex flex-col shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <span className="font-bold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                                    TaskTrek
+                                </span>
+                                <button
+                                    onClick={closeMobileMenu}
+                                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                                >
+                                    ✕
+                                </button>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">Username</p>
-                                <p className="text-xs text-gray-400 truncate">Free Plan</p>
+
+                            <nav className="flex flex-col gap-2 flex-1">
+                                {navItems.map((item) => {
+                                    const isActive = pathname === item.href;
+
+                                    return (
+                                        <Link key={item.name} href={item.href}>
+                                            <motion.div
+                                                whileTap={{ scale: 0.95 }}
+                                                className={`
+                                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                                                    ${isActive
+                                                        ? "bg-blue-500 shadow-lg shadow-blue-500/25"
+                                                        : "bg-gray-700/50 hover:bg-gray-700"
+                                                    }
+                                                `}
+                                            >
+                                                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                                                <span className="font-medium">{item.name}</span>
+
+                                                {isActive && (
+                                                    <motion.div
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: 1 }}
+                                                        className="w-2 h-2 bg-blue-300 rounded-full ml-auto"
+                                                    />
+                                                )}
+                                            </motion.div>
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+
+                            <div className="p-3 bg-gray-700/30 rounded-xl border border-gray-600">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-sm font-bold">U</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{username}</p>
+                                        <p className="text-xs text-gray-400 truncate">Free Plan</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </>
+    );
+
+    return (
+        <>
+            {desktopSidebar}
+            {mobileSidebar}
+        </>
     );
 };
 
