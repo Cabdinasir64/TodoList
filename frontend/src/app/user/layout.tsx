@@ -9,9 +9,9 @@ export const metadata: Metadata = {
     },
     description: "Manage your account, tasks, and profile in one place",
     keywords: ["user", "dashboard", "tasks", "profile", "management"],
-    authors: [{ name: "Your Company" }],
-    creator: "Your Company",
-    publisher: "Your Company",
+    authors: [{ name: "TaskTrek" }],
+    creator: "TaskTrek",
+    publisher: "TaskTrek",
     formatDetection: {
         email: false,
         address: false,
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
         title: "User Dashboard",
         description: "Manage your account, tasks, and profile in one place",
         url: "/user",
-        siteName: "Your App",
+        siteName: "TaskTrek",
         locale: "en_US",
         type: "website",
     },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: "User Dashboard",
         description: "Manage your account, tasks, and profile in one place",
-        creator: "@yourapp",
+        creator: "@TaskTrek",
     },
     robots: {
         index: true,
@@ -56,9 +56,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
     return (
         <div className="min-h-screen bg-gray-50">
             <UserHeader />
-            <div className="flex">
+            <div className="flex flex-col lg:flex-row">
                 <UserSidebar />
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-4 lg:p-6 w-full">
                     {children}
                 </main>
             </div>
