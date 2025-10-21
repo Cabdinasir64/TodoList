@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import UserDashboard from "./user-dashboard";
+import UserDashboard from "../components/user/user-dashboard";
 
 export const metadata: Metadata = {
   title: "Overview | TaskTrek",
