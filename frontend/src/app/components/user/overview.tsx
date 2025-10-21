@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend
+    Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend,
+    PieLabelRenderProps
 } from 'recharts';
 
 interface Task {
@@ -24,13 +25,29 @@ interface TasksResponse {
     completed?: number;
 }
 
+interface PayloadItem {
+    payload: {
+        name: string;
+        value: number;
+        percentage: string;
+        color: string;
+    };
+    name: string;
+    value: number;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: PayloadItem[];
+}
+
 const COLORS = {
     pending: '#F59E0B',
     'in-progress': '#3B82F6',
     completed: '#10B981'
 };
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
@@ -45,7 +62,14 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+const renderCustomizedLabel = (props: PieLabelRenderProps) => {
+    const cx = props.cx as number;
+    const cy = props.cy as number;
+    const midAngle = props.midAngle as number;
+    const innerRadius = props.innerRadius as number;
+    const outerRadius = props.outerRadius as number;
+    const percent = props.percent as number;
+
     if (percent === 0) return null;
 
     const RADIAN = Math.PI / 180;
@@ -105,7 +129,7 @@ const Overview = () => {
                     inProgress,
                     completed
                 });
-            } catch (err) {
+            } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "An error occurred");
             } finally {
                 setIsLoading(false);
@@ -250,7 +274,7 @@ const Overview = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Distribution</h3>
-                    <div className="h-64">
+                    <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
