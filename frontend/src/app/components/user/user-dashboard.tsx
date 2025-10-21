@@ -133,6 +133,7 @@ export default function UserDashboard() {
         queryFn: fetchTasks,
         retry: 1,
         staleTime: 5 * 60 * 1000,
+        refetchInterval: 60
     });
 
     return (
