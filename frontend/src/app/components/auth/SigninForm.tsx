@@ -23,8 +23,12 @@ export default function SigninForm() {
             const redirectPath = data.redirect || "/user/dashboard";
             router.push(redirectPath);
         },
-        onError: (error: any) => {
-            toast.error(error.message || "❌ Invalid credentials");
+        onError: (error: unknown) => {
+            if (error instanceof Error) {
+                toast.error(error.message || "❌ Invalid credentials");
+            } else {
+                toast.error("❌ An unknown error occurred");
+            }
         },
     });
 
@@ -214,11 +218,8 @@ export default function SigninForm() {
 
                 <div className="mt-8 pt-6 border-t border-gray-200">
                     <p className="text-center text-gray-600 text-sm">
-                        Don't have an account?{" "}
-                        <Link
-                            href="/signup"
-                            className="text-blue-600 font-medium hover:text-blue-800 transition-colors hover:underline"
-                        >
+                        Don&apos;t have an account?{" "}
+                        <Link href="/signup" className="text-blue-600 font-medium hover:text-blue-800 transition-colors hover:underline">
                             Sign Up
                         </Link>
                     </p>
