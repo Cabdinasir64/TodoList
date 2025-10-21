@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
     Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend,
@@ -25,13 +24,15 @@ interface TasksResponse {
     completed?: number;
 }
 
+interface StatusDataItem extends Record<string, unknown> {
+    name: string;
+    value: number;
+    percentage: string;
+    color: string;
+}
+
 interface PayloadItem {
-    payload: {
-        name: string;
-        value: number;
-        percentage: string;
-        color: string;
-    };
+    payload: StatusDataItem;
     name: string;
     value: number;
 }
@@ -39,6 +40,10 @@ interface PayloadItem {
 interface CustomTooltipProps {
     active?: boolean;
     payload?: PayloadItem[];
+}
+
+interface OverviewProps {
+    tasksData: TasksResponse;
 }
 
 const COLORS = {
@@ -92,89 +97,7 @@ const renderCustomizedLabel = (props: PieLabelRenderProps) => {
     );
 };
 
-const Overview = () => {
-    const [tasksData, setTasksData] = useState<TasksResponse | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`, {
-                    method: "GET",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch tasks: ${response.status}`);
-                }
-
-                const data: TasksResponse = await response.json();
-
-                const total = data.tasks?.length || 0;
-                const pending = data.tasks?.filter(task => task.status === "pending").length || 0;
-                const inProgress = data.tasks?.filter(task => task.status === "in-progress").length || 0;
-                const completed = data.tasks?.filter(task => task.status === "completed").length || 0;
-
-                setTasksData({
-                    ...data,
-                    total,
-                    pending,
-                    inProgress,
-                    completed
-                });
-            } catch (err: unknown) {
-                setError(err instanceof Error ? err.message : "An error occurred");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchTasks();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="animate-pulse">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-lg shadow p-6">
-                            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                        </div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-lg shadow p-6 h-80">
-                        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                        <div className="h-64 bg-gray-200 rounded"></div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6 h-80">
-                        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                        <div className="h-64 bg-gray-200 rounded"></div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                <div className="text-red-600 text-lg font-semibold mb-2">
-                    Error loading tasks
-                </div>
-                <p className="text-red-500">{error}</p>
-            </div>
-        );
-    }
-
+const Overview: React.FC<OverviewProps> = ({ tasksData }) => {
     if (!tasksData || !tasksData.tasks) {
         return (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
@@ -187,7 +110,7 @@ const Overview = () => {
     }
 
     const totalTasks = tasksData.total || 1;
-    const statusData = [
+    const statusData: StatusDataItem[] = [
         {
             name: 'Pending',
             value: tasksData.pending || 0,
@@ -205,7 +128,7 @@ const Overview = () => {
             value: tasksData.completed || 0,
             percentage: ((tasksData.completed || 0) / totalTasks * 100).toFixed(1),
             color: COLORS.completed
-        }
+        },
     ];
 
     const recentTasks = tasksData.tasks.slice(0, 5);
@@ -300,37 +223,22 @@ const Overview = () => {
 
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks Summary</h3>
-                    <div className="h-64 flex flex-col justify-center">
-                        <div className="space-y-4">
-                            {statusData.map((status) => (
-                                <div key={status.name} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <div
-                                            className="w-4 h-4 rounded-full"
-                                            style={{ backgroundColor: status.color }}
-                                        ></div>
-                                        <span className="text-sm font-medium text-gray-700">
-                                            {status.name}
-                                        </span>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-sm font-semibold text-gray-900">
-                                            {status.value}
-                                        </span>
-                                        <span className="text-xs text-gray-500 ml-2">
-                                            ({status.percentage}%)
-                                        </span>
-                                    </div>
+                    <div className="h-64 flex flex-col justify-center space-y-4">
+                        {statusData.map((status) => (
+                            <div key={status.name} className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: status.color }}></div>
+                                    <span className="text-sm font-medium text-gray-700">{status.name}</span>
                                 </div>
-                            ))}
-                            <div className="border-t border-gray-200 pt-4 mt-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-semibold text-gray-900">Total</span>
-                                    <span className="text-sm font-semibold text-gray-900">
-                                        {tasksData.total || 0}
-                                    </span>
+                                <div className="text-right">
+                                    <span className="text-sm font-semibold text-gray-900">{status.value}</span>
+                                    <span className="text-xs text-gray-500 ml-2">({status.percentage}%)</span>
                                 </div>
                             </div>
+                        ))}
+                        <div className="border-t border-gray-200 pt-4 mt-4 flex justify-between">
+                            <span className="text-sm font-semibold text-gray-900">Total</span>
+                            <span className="text-sm font-semibold text-gray-900">{tasksData.total || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -346,9 +254,7 @@ const Overview = () => {
                             {recentTasks.map((task) => (
                                 <div key={task._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                     <div className="flex items-center space-x-4">
-                                        <div className={`w-3 h-3 rounded-full ${task.status === 'completed' ? 'bg-green-500' :
-                                            task.status === 'in-progress' ? 'bg-blue-500' : 'bg-amber-500'
-                                            }`}></div>
+                                        <div className={`w-3 h-3 rounded-full ${task.status === 'completed' ? 'bg-green-500' : task.status === 'in-progress' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
                                         <div>
                                             <p className="font-medium text-gray-900">{task.title}</p>
                                             <p className="text-sm text-gray-500">
@@ -356,11 +262,8 @@ const Overview = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                            task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-amber-100 text-amber-800'
-                                            }`}>
+                                    <div>
+                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${task.status === 'completed' ? 'bg-green-100 text-green-800' : task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
                                             {task.status}
                                         </span>
                                     </div>
@@ -368,9 +271,7 @@ const Overview = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-8">
-                            <p className="text-gray-500">No tasks found</p>
-                        </div>
+                        <div className="text-center py-8 text-gray-500">No tasks found</div>
                     )}
                 </div>
             </div>
