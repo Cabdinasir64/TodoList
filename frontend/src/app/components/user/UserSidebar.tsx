@@ -11,17 +11,29 @@ interface NavItem {
     name: string;
     href: string;
     icon: string;
+    type?: "link" | "dropdown";
+    children?: { name: string; href: string; icon: string }[];
 }
 
 const navItems: NavItem[] = [
-    { name: "Dashboard", href: "/user/dashboard", icon: "🏠" },
-    { name: "Tasks", href: "/user/tasks", icon: "✅" },
+    { name: "Dashboard", href: "/user/dashboard", icon: "📊" },
+    {
+        name: "Tasks",
+        href: "/user/tasks",
+        icon: "✅",
+        type: "dropdown",
+        children: [
+            { name: "All Tasks", href: "/user/tasks", icon: "📋" },
+            { name: "Add New Task", href: "/user/tasks/new", icon: "➕" },
+        ]
+    },
     { name: "Profile", href: "/user/profile", icon: "👤" },
 ];
 
 const UserSidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
+    const [tasksDropdownOpen, setTasksDropdownOpen] = useState(false);
     const pathname = usePathname();
 
     const { isMobileMenuOpen, closeMobileMenu } = useMobileMenuStore();
@@ -48,6 +60,158 @@ const UserSidebar = () => {
     useEffect(() => {
         closeMobileMenu();
     }, [pathname, closeMobileMenu]);
+
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (tasksDropdownOpen) {
+                setTasksDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [tasksDropdownOpen]);
+
+    const isTasksActive = pathname.startsWith('/user/tasks');
+
+    const renderNavItem = (item: NavItem) => {
+        const isActive = pathname === item.href;
+
+        if (item.type === "dropdown") {
+            return (
+                <div key={item.name} className="relative">
+                    <motion.button
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setTasksDropdownOpen(!tasksDropdownOpen);
+                        }}
+                        className={`
+                            w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                            ${isTasksActive
+                                ? "bg-blue-500 shadow-lg shadow-blue-500/25"
+                                : "bg-gray-700/50 hover:bg-gray-700"
+                            }
+                            ${isOpen ? "justify-start" : "justify-center"}
+                        `}
+                    >
+                        <span className="text-lg flex-shrink-0">{item.icon}</span>
+
+                        <AnimatePresence>
+                            {isOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0, width: 0 }}
+                                    animate={{ opacity: 1, width: "auto" }}
+                                    exit={{ opacity: 0, width: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="font-medium whitespace-nowrap overflow-hidden flex-1 text-left"
+                                >
+                                    {item.name}
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+
+                        {isOpen && (
+                            <motion.span
+                                animate={{ rotate: tasksDropdownOpen ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-sm"
+                            >
+                                ▼
+                            </motion.span>
+                        )}
+
+                        {!isOpen && isTasksActive && (
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute right-2 w-2 h-2 bg-blue-300 rounded-full"
+                            />
+                        )}
+                    </motion.button>
+
+                    <AnimatePresence>
+                        {tasksDropdownOpen && isOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="ml-4 mt-1 space-y-1 overflow-hidden"
+                            >
+                                {item.children?.map((child) => {
+                                    const isChildActive = pathname === child.href;
+                                    return (
+                                        <Link key={child.name} href={child.href}>
+                                            <motion.div
+                                                whileHover={{ scale: 1.02, x: 4 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => setTasksDropdownOpen(false)}
+                                                className={`
+                                                    flex items-center gap-3 p-2 pl-8 rounded-lg transition-all duration-200
+                                                    ${isChildActive
+                                                        ? "bg-blue-400/20 text-blue-300"
+                                                        : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                                                    }
+                                                `}
+                                            >
+                                                <span className="text-sm">{child.icon}</span>
+                                                <span className="text-sm font-medium whitespace-nowrap">
+                                                    {child.name}
+                                                </span>
+                                            </motion.div>
+                                        </Link>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
+        }
+
+        return (
+            <Link key={item.name} href={item.href}>
+                <motion.div
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`
+                        flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                        ${isActive
+                            ? "bg-blue-500 shadow-lg shadow-blue-500/25"
+                            : "bg-gray-700/50 hover:bg-gray-700"
+                        }
+                        ${isOpen ? "justify-start" : "justify-center"}
+                    `}
+                >
+                    <span className="text-lg flex-shrink-0">{item.icon}</span>
+
+                    <AnimatePresence>
+                        {isOpen && (
+                            <motion.span
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: "auto" }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="font-medium whitespace-nowrap overflow-hidden"
+                            >
+                                {item.name}
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+
+                    {!isOpen && isActive && (
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute right-2 w-2 h-2 bg-blue-300 rounded-full"
+                        />
+                    )}
+                </motion.div>
+            </Link>
+        );
+    };
 
     const desktopSidebar = (
         <motion.div
@@ -85,51 +249,9 @@ const UserSidebar = () => {
                     </motion.span>
                 </motion.button>
             </div>
+
             <nav className="flex flex-col gap-2 flex-1">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-
-                    return (
-                        <Link key={item.name} href={item.href}>
-                            <motion.div
-                                whileHover={{ scale: 1.02, x: 4 }}
-                                whileTap={{ scale: 0.98 }}
-                                className={`
-                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200
-                                    ${isActive
-                                        ? "bg-blue-500 shadow-lg shadow-blue-500/25"
-                                        : "bg-gray-700/50 hover:bg-gray-700"
-                                    }
-                                    ${isOpen ? "justify-start" : "justify-center"}
-                                `}
-                            >
-                                <span className="text-lg flex-shrink-0">{item.icon}</span>
-
-                                <AnimatePresence>
-                                    {isOpen && (
-                                        <motion.span
-                                            initial={{ opacity: 0, width: 0 }}
-                                            animate={{ opacity: 1, width: "auto" }}
-                                            exit={{ opacity: 0, width: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="font-medium whitespace-nowrap overflow-hidden"
-                                        >
-                                            {item.name}
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
-
-                                {!isOpen && isActive && (
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="absolute right-2 w-2 h-2 bg-blue-300 rounded-full"
-                                    />
-                                )}
-                            </motion.div>
-                        </Link>
-                    );
-                })}
+                {navItems.map(renderNavItem)}
             </nav>
         </motion.div>
     );
@@ -167,12 +289,43 @@ const UserSidebar = () => {
 
                             <nav className="flex flex-col gap-2 flex-1">
                                 {navItems.map((item) => {
-                                    const isActive = pathname === item.href;
+                                    if (item.type === "dropdown") {
+                                        return (
+                                            <div key={item.name} className="space-y-1">
+                                                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-2">
+                                                    {item.name}
+                                                </div>
+                                                {item.children?.map((child) => {
+                                                    const isChildActive = pathname === child.href;
+                                                    return (
+                                                        <Link key={child.name} href={child.href}>
+                                                            <motion.div
+                                                                whileTap={{ scale: 0.95 }}
+                                                                onClick={closeMobileMenu}
+                                                                className={`
+                                                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                                                                    ${isChildActive
+                                                                        ? "bg-blue-500 shadow-lg shadow-blue-500/25"
+                                                                        : "bg-gray-700/50 hover:bg-gray-700"
+                                                                    }
+                                                                `}
+                                                            >
+                                                                <span className="text-lg">{child.icon}</span>
+                                                                <span className="font-medium">{child.name}</span>
+                                                            </motion.div>
+                                                        </Link>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    }
 
+                                    const isActive = pathname === item.href;
                                     return (
                                         <Link key={item.name} href={item.href}>
                                             <motion.div
                                                 whileTap={{ scale: 0.95 }}
+                                                onClick={closeMobileMenu}
                                                 className={`
                                                     flex items-center gap-3 p-3 rounded-xl transition-all duration-200
                                                     ${isActive
@@ -181,16 +334,8 @@ const UserSidebar = () => {
                                                     }
                                                 `}
                                             >
-                                                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                                                <span className="text-lg">{item.icon}</span>
                                                 <span className="font-medium">{item.name}</span>
-
-                                                {isActive && (
-                                                    <motion.div
-                                                        initial={{ scale: 0 }}
-                                                        animate={{ scale: 1 }}
-                                                        className="w-2 h-2 bg-blue-300 rounded-full ml-auto"
-                                                    />
-                                                )}
                                             </motion.div>
                                         </Link>
                                     );
@@ -200,10 +345,12 @@ const UserSidebar = () => {
                             <div className="p-3 bg-gray-700/30 rounded-xl border border-gray-600">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-sm font-bold">U</span>
+                                        <span className="text-white text-sm font-bold">
+                                            {username ? username.charAt(0).toUpperCase() : 'U'}
+                                        </span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{username}</p>
+                                        <p className="text-sm font-medium truncate">{username || 'User'}</p>
                                         <p className="text-xs text-gray-400 truncate">Free Plan</p>
                                     </div>
                                 </div>
