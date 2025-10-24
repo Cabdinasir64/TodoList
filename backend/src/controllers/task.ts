@@ -133,7 +133,6 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
-        console.error('Error in getTasks:', error);
         res.status(500).json({
             message: "Server error",
             error: error instanceof Error ? error.message : 'Unknown error'
@@ -177,7 +176,6 @@ export const getTasksOverview = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
-        console.error('Error in getTasksOverview:', error);
         res.status(500).json({
             message: "Server error",
             error: error instanceof Error ? error.message : 'Unknown error'
