@@ -149,7 +149,7 @@ const UserSidebar = () => {
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={() => setTasksDropdownOpen(false)}
                                                 className={`
-                                                    flex items-center gap-3 p-2 pl-8 rounded-lg transition-all duration-200
+                                                    flex items-center gap-6 p-2 pl-8 rounded-lg transition-all duration-200
                                                     ${isChildActive
                                                         ? "bg-blue-400/20 text-blue-300"
                                                         : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
@@ -303,7 +303,7 @@ const UserSidebar = () => {
                                                                 whileTap={{ scale: 0.95 }}
                                                                 onClick={closeMobileMenu}
                                                                 className={`
-                                                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                                                                    flex items-center gap-6 p-3 rounded-xl transition-all duration-200
                                                                     ${isChildActive
                                                                         ? "bg-blue-500 shadow-lg shadow-blue-500/25"
                                                                         : "bg-gray-700/50 hover:bg-gray-700"
