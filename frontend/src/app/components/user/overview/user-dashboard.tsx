@@ -12,33 +12,30 @@ interface Task {
     updatedAt: string;
 }
 
-interface TasksResponse {
+interface OverviewResponse {
     message: string;
-    tasks: Task[];
-    total?: number;
-    pending?: number;
-    inProgress?: number;
-    completed?: number;
+    statistics: {
+        total: number;
+        pending: number;
+        inProgress: number;
+        completed: number;
+    };
+    recentTasks: Task[];
+    allTasks?: Task[];
 }
 
-const fetchTasks = async (): Promise<TasksResponse> => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`, {
+const fetchTasksOverview = async (): Promise<OverviewResponse> => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/overview`, {
         credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!res.ok) throw new Error("Failed to fetch tasks");
+    if (!res.ok) throw new Error("Failed to fetch tasks overview");
 
-    const data: TasksResponse = await res.json();
-
-    const total = data.tasks?.length || 0;
-    const pending = data.tasks?.filter((t) => t.status === "pending").length || 0;
-    const inProgress = data.tasks?.filter((t) => t.status === "in-progress").length || 0;
-    const completed = data.tasks?.filter((t) => t.status === "completed").length || 0;
-
-    return { ...data, total, pending, inProgress, completed };
+    const data: OverviewResponse = await res.json();
+    return data;
 };
 
 const LoadingSkeleton = () => {
@@ -128,12 +125,11 @@ const LoadingSkeleton = () => {
 };
 
 export default function UserDashboard() {
-    const { data: tasksData, isLoading, error } = useQuery({
-        queryKey: ['tasks'],
-        queryFn: fetchTasks,
+    const { data: overviewData, isLoading, error } = useQuery({
+        queryKey: ['tasks-overview'],
+        queryFn: fetchTasksOverview,
         retry: 1,
-        staleTime: 5 * 60 * 1000,
-        refetchInterval: 60
+        refetchInterval: 10 * 1000,
     });
 
     return (
@@ -152,7 +148,7 @@ export default function UserDashboard() {
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                     <div className="text-red-600 text-lg font-semibold mb-2">
-                        Error loading tasks
+                        Error loading overview
                     </div>
                     <p className="text-red-500">{(error as Error).message}</p>
                     <button
@@ -164,7 +160,7 @@ export default function UserDashboard() {
                 </div>
             )}
 
-            {tasksData && <Overview tasksData={tasksData} />}
+            {overviewData && <Overview overviewData={overviewData} />}
         </div>
     );
 }
