@@ -83,58 +83,104 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ message: "Not authenticated" });
         }
 
-        const tasks = await Task.find({ user: req.user.id });
-        res.status(200).json({ tasks });
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const search = (req.query.search as string) || '';
+        const status = (req.query.status as string) || '';
+
+        const validLimits = [10, 20, 30, 40, 50];
+        if (!validLimits.includes(limit)) {
+            return res.status(400).json({
+                message: "Invalid limit. Available options: 10, 20, 30, 40, 50"
+            });
+        }
+
+        const skip = (page - 1) * limit;
+
+        const filter: any = { user: req.user.id };
+
+        if (search) {
+            filter.title = { $regex: search, $options: 'i' };
+        }
+
+        if (status && ['pending', 'in-progress', 'completed'].includes(status)) {
+            filter.status = status;
+        }
+
+        const tasks = await Task.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .select('title description status createdAt')
+            .lean();
+
+        const totalTasks = await Task.countDocuments(filter);
+
+        const totalPages = Math.ceil(totalTasks / limit);
+        const hasNext = page < totalPages;
+        const hasPrev = page > 1;
+
+        res.status(200).json({
+            tasks,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalTasks,
+                hasNext,
+                hasPrev,
+                limit
+            }
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        console.error('Error in getTasks:', error);
+        res.status(500).json({
+            message: "Server error",
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 };
 
-export const searchTasks = async (req: AuthRequest, res: Response) => {
+export const getTasksOverview = async (req: AuthRequest, res: Response) => {
     try {
-        const { query } = req.query;
-
         if (!req.user) {
             return res.status(401).json({ message: "Not authenticated" });
         }
 
-        if (!query || typeof query !== "string") {
-            return res.status(400).json({ message: "Search query is required" });
-        }
+        const tasks = await Task.find({ user: req.user.id })
+            .select('title description status createdAt')
+            .lean();
 
-        const tasks = await Task.find({
-            user: req.user.id,
-            $or: [
-                { title: { $regex: query, $options: "i" } },
-                { description: { $regex: query, $options: "i" } },
-            ],
+        const total = tasks.length;
+        const pending = tasks.filter(task => task.status === 'pending').length;
+        const inProgress = tasks.filter(task => task.status === 'in-progress').length;
+        const completed = tasks.filter(task => task.status === 'completed').length;
+
+        const recentTasks = tasks
+            .sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return dateB - dateA;
+            })
+            .slice(0, 5);
+
+        res.status(200).json({
+            message: "Overview data fetched successfully",
+            statistics: {
+                total,
+                pending,
+                inProgress,
+                completed
+            },
+            recentTasks,
+            allTasks: tasks
         });
 
-        res.status(200).json({ tasks });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
-    }
-};
-
-export const filterTasks = async (req: AuthRequest, res: Response) => {
-    try {
-        const { status } = req.query;
-
-        if (!req.user) {
-            return res.status(401).json({ message: "Not authenticated" });
-        }
-
-        if (!status || !["pending", "in-progress", "completed"].includes(status as string)) {
-            return res.status(400).json({ message: "Invalid or missing status" });
-        }
-
-        const tasks = await Task.find({
-            user: req.user.id,
-            status,
+        console.error('Error in getTasksOverview:', error);
+        res.status(500).json({
+            message: "Server error",
+            error: error instanceof Error ? error.message : 'Unknown error'
         });
-
-        res.status(200).json({ tasks });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error });
     }
 };
