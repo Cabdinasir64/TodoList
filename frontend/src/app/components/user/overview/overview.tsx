@@ -139,7 +139,6 @@ const Overview: React.FC<OverviewProps> = ({ overviewData }) => {
 
     return (
         <div className="space-y-6">
-            {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
                     <div className="flex items-center justify-between">
