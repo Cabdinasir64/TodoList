@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect, FormEvent } from 'react';
+
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import api from '../../../util/api';
 import TaskListUI from './TaskListUI';
 
@@ -49,7 +50,7 @@ const TaskList = () => {
 
     const router = useRouter();
 
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         try {
             setLoading(true);
             setError('');
@@ -65,13 +66,19 @@ const TaskList = () => {
             setTasks(response.data.tasks);
             setPagination(response.data.pagination);
         } catch (err: unknown) {
-            const errorMessage = (err as any).response.data.message || 'Failed to load tasks';
+            let errorMessage = 'Failed to load tasks';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'object' && err !== null && 'response' in err) {
+                const axiosError = err as { response?: { data?: { message?: string } } };
+                errorMessage = axiosError.response?.data?.message || errorMessage;
+            }
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, itemsPerPage, searchInput, statusFilter]);
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -79,7 +86,7 @@ const TaskList = () => {
         }, 500);
 
         return () => clearTimeout(delayDebounce);
-    }, [currentPage, itemsPerPage, searchInput, statusFilter]);
+    }, [fetchTasks]);
 
     const handleDelete = async (taskId: string) => {
         if (!confirm('Are you sure you want to delete this task?')) return;
@@ -92,7 +99,13 @@ const TaskList = () => {
             toast.success('Task deleted successfully! 🗑️');
 
         } catch (err: unknown) {
-            const errorMessage = (err as any).response.data.message || 'Failed to delete task';
+            let errorMessage = 'Failed to delete task';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'object' && err !== null && 'response' in err) {
+                const axiosError = err as { response?: { data?: { message?: string } } };
+                errorMessage = axiosError.response?.data?.message || errorMessage;
+            }
             toast.error(errorMessage);
         } finally {
             setDeletingId(null);
@@ -140,7 +153,7 @@ const TaskList = () => {
     };
 
     const getPageNumbers = () => {
-        const pages = [];
+        const pages: (number | string)[] = [];
         const maxVisiblePages = 5;
 
         if (pagination.totalPages <= maxVisiblePages) {
@@ -149,23 +162,17 @@ const TaskList = () => {
             }
         } else {
             if (currentPage <= 3) {
-                for (let i = 1; i <= 4; i++) {
-                    pages.push(i);
-                }
+                for (let i = 1; i <= 4; i++) pages.push(i);
                 pages.push('...');
                 pages.push(pagination.totalPages);
             } else if (currentPage >= pagination.totalPages - 2) {
                 pages.push(1);
                 pages.push('...');
-                for (let i = pagination.totalPages - 3; i <= pagination.totalPages; i++) {
-                    pages.push(i);
-                }
+                for (let i = pagination.totalPages - 3; i <= pagination.totalPages; i++) pages.push(i);
             } else {
                 pages.push(1);
                 pages.push('...');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    pages.push(i);
-                }
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
                 pages.push('...');
                 pages.push(pagination.totalPages);
             }
