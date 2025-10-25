@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import api from '../../../../util/api';
@@ -34,13 +35,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ editTaskId }) => {
         status: 'pending'
     });
 
-    useEffect(() => {
-        if (editTaskId) {
-            fetchTaskData();
-        }
-    }, [editTaskId]);
+    const fetchTaskData = useCallback(async () => {
+        if (!editTaskId) return;
 
-    const fetchTaskData = async () => {
         try {
             setLoading(true);
             setError('');
@@ -56,13 +53,27 @@ const TaskForm: React.FC<TaskFormProps> = ({ editTaskId }) => {
 
             toast.success('Task loaded for editing');
         } catch (err: unknown) {
-            const errorMessage = (err as any).response?.data?.message || 'Failed to load task';
+            let errorMessage = 'Failed to load task';
+
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'object' && err !== null && 'response' in err) {
+                const axiosError = err as { response?: { data?: { message?: string } } };
+                errorMessage = axiosError.response?.data?.message || errorMessage;
+            }
+
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
-    };
+    }, [editTaskId]);
+
+    useEffect(() => {
+        if (editTaskId) {
+            fetchTaskData();
+        }
+    }, [editTaskId, fetchTaskData]);
 
     const handleInputChange = (field: keyof TaskFormData, value: string) => {
         setFormData(prev => ({
@@ -73,7 +84,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ editTaskId }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!formData.title.trim()) {
             toast.error('Title is required');
             return;
@@ -96,8 +107,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ editTaskId }) => {
             }, 1500);
 
         } catch (err: unknown) {
-            const errorMessage = (err as any).response?.data?.message ||
-                (editTaskId ? 'Failed to update task' : 'Failed to create task');
+            let errorMessage = editTaskId ? 'Failed to update task' : 'Failed to create task';
+
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'object' && err !== null && 'response' in err) {
+                const axiosError = err as { response?: { data?: { message?: string } } };
+                errorMessage = axiosError.response?.data?.message || errorMessage;
+            }
+
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -116,7 +134,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ editTaskId }) => {
             submitting={submitting}
             error={error}
             isEdit={!!editTaskId}
-            
             onInputChange={handleInputChange}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
