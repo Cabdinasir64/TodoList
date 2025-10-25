@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, FormEvent } from 'react';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation'
 import api from '../../../util/api';
 import TaskListUI from './TaskListUI';
 
@@ -45,6 +46,8 @@ const TaskList = () => {
         hasPrev: false,
         limit: 10
     });
+
+    const router = useRouter();
 
     const fetchTasks = async () => {
         try {
@@ -94,6 +97,10 @@ const TaskList = () => {
         } finally {
             setDeletingId(null);
         }
+    };
+
+    const handleEdit = (taskId: string) => {
+        router.push(`/user/tasks/new?edit=${taskId}`);
     };
 
     const handleSearch = (e: FormEvent) => {
@@ -184,7 +191,7 @@ const TaskList = () => {
             onPageChange={handlePageChange}
             onItemsPerPageChange={handleItemsPerPageChange}
             onDelete={handleDelete}
-            onEdit={() => toast.success('Edit feature coming soon! 🚀')}
+            onEdit={handleEdit}
 
             getPageNumbers={getPageNumbers}
         />
