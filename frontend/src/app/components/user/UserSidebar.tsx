@@ -138,7 +138,7 @@ const UserSidebar = () => {
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="ml-4 mt-1 space-y-1 overflow-hidden"
+                                className="ml-4 mt-3 space-y-3 overflow-hidden"
                             >
                                 {item.children?.map((child) => {
                                     const isChildActive = pathname === child.href;
@@ -303,7 +303,7 @@ const UserSidebar = () => {
                                                                 whileTap={{ scale: 0.95 }}
                                                                 onClick={closeMobileMenu}
                                                                 className={`
-                                                                    flex items-center gap-6 p-3 rounded-xl transition-all duration-200
+                                                                    flex items-center gap-6 p-3 mb-3 rounded-xl transition-all duration-200
                                                                     ${isChildActive
                                                                         ? "bg-blue-500 shadow-lg shadow-blue-500/25"
                                                                         : "bg-gray-700/50 hover:bg-gray-700"
