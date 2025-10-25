@@ -36,7 +36,7 @@ interface TaskListUIProps {
     onPageChange: (page: number) => void;
     onItemsPerPageChange: (limit: number) => void;
     onDelete: (taskId: string) => void;
-    onEdit: () => void;
+    onEdit: (taskId: string) => void;
 
     getPageNumbers: () => (number | string)[];
 }
@@ -239,7 +239,7 @@ const TaskListUI: React.FC<TaskListUIProps> = ({
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={onEdit}
+                                                onClick={() => onEdit(task._id)}
                                                 className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                                             >
                                                 Edit
