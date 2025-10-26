@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "TaskTrek",
     images: [
       {
-        url: "/TaskTrek.png",
+        url: "/TaskTrek.ico",
         width: 1200,
         height: 630,
         alt: "TaskTrek Logo",
