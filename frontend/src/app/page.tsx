@@ -1,5 +1,6 @@
 import Hero from './components/page/hero'
 import Navbar from './components/page/navbar'
+import OpenInSafariNotice from './components/common/OpenInSafariNotice'
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function Home() {
     <>
       <Navbar />
       <Hero />
+      <OpenInSafariNotice />
     </>
   );
 }
