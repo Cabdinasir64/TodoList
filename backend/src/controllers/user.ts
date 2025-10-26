@@ -160,12 +160,10 @@ export const loginUser = async (req: Request, res: Response) => {
             { expiresIn: JWT_EXPIRES_IN }
         );
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
+        req.session.user = {
+            id: (user._id as string).toString(),
+            role: user.role
+        };
 
         res.status(200).json({
             message: "Login successful",
@@ -178,13 +176,13 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 export const logoutUser = (req: Request, res: Response) => {
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).json({ message: "Error logging out" });
+        }
+        res.clearCookie("sessionId");
+        res.status(200).json({ message: "User logged out successfully" });
     });
-
-    res.status(200).json({ message: "User logged out successfully" });
 };
 
 export const getMe = async (req: AuthRequest, res: Response) => {
