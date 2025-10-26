@@ -42,6 +42,100 @@ export const createUser = async (req: Request, res: Response) => {
     }
 };
 
+export const getUsers = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
+
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const search = req.query.search as string || '';
+        const skip = (page - 1) * limit;
+
+        let filter: any = {};
+        if (search) {
+            filter.$or = [
+                { username: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const [users, totalUsers] = await Promise.all([
+            User.find(filter)
+                .select('-password')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            User.countDocuments(filter)
+        ]);
+
+        const totalPages = Math.ceil(totalUsers / limit);
+        const hasNext = page < totalPages;
+        const hasPrev = page > 1;
+
+        res.status(200).json({
+            users,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalUsers,
+                hasNext,
+                hasPrev,
+                limit
+            }
+        });
+
+    } catch (error) {
+        console.error("Get users error:", error);
+        res.status(500).json({
+            message: "Server error",
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+
+export const updateUserRole = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
+
+        const { userId } = req.params;
+        const { role } = req.body;
+
+        if (!['admin', 'user'].includes(role)) {
+            return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'user'" });
+        }
+
+        if (userId === req.user.id) {
+            return res.status(400).json({ message: "Cannot change your own role" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { role },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            message: "User role updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error",
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+
 export const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
