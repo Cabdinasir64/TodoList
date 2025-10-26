@@ -22,7 +22,7 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "dev": "node ts-node src/server.ts",
+    "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   }
