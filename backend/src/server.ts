@@ -17,7 +17,7 @@ const app = express();
 app.use(cookieParser());
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: "https://todo-list-cyan-zeta.vercel.app",
     credentials: true,
 }));
 
