@@ -21,7 +21,7 @@ app.use(express.json());
 
 app.use(session({
     name: "sessionId",
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.JWT_SECRET!,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
