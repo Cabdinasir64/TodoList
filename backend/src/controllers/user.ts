@@ -162,8 +162,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
         req.session.user = {
             id: (user._id as string).toString(),
-            role: user.role,
-            username: user.username
+            role: user.role
         };
 
         res.status(200).json({
