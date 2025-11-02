@@ -7,6 +7,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import { auditMiddleware } from "./middleware/auditMiddleware";
 
 dotenv.config();
 
@@ -42,8 +43,8 @@ app.use(cors({
     credentials: true,
 }));
 
-app.use("/api/users", userRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/users", auditMiddleware, userRoutes);
+app.use("/api/tasks", auditMiddleware, taskRoutes);
 
 const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
