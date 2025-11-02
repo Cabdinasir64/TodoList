@@ -13,16 +13,16 @@ import { roleMiddleware } from "../middleware/roleMiddleware";
 const router = Router();
 
 
-router.post("/", roleMiddleware(["user"]), createTask);
+router.post("/", authMiddleware, roleMiddleware(["user"]), createTask);
 
-router.get("/", roleMiddleware(["user"]), getTasks);
+router.get("/", authMiddleware, roleMiddleware(["user"]), getTasks);
 
-router.get("/overview", roleMiddleware(["user"]), getTasksOverview);
+router.get("/overview", authMiddleware, roleMiddleware(["user"]), getTasksOverview);
 
-router.get("/:id", roleMiddleware(["user"]), getTaskID);
+router.get("/:id", authMiddleware, roleMiddleware(["user"]), getTaskID);
 
-router.put("/:id", roleMiddleware(["user"]), updateTask);
+router.put("/:id", authMiddleware, roleMiddleware(["user"]), updateTask);
 
-router.delete("/:id", roleMiddleware(["user"]), deleteTask);
+router.delete("/:id", authMiddleware, roleMiddleware(["user"]), deleteTask);
 
 export default router;
